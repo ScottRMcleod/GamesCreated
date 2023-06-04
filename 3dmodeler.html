@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>3D Modeling App</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/controls/OrbitControls.js"></script>
+  <script>
+    // Set up the scene, camera, and renderer
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Create a cube geometry
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+
+    // Create a basic material
+    const material = new THREE.MeshBasicMaterial({
+      color: 0x00ff00,
+      vertexColors: THREE.FaceColors
+    });
+
+    // Set face colors for each face of the cube
+    for (let i = 0; i < geometry.faces.length; i++) {
+      geometry.faces[i].color.setHex(0x00ff00);
+    }
+
+    // Create a mesh and add it to the scene
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+
+    // Set the initial camera position
+    camera.position.z = 5;
+
+    // Raycaster and mouse vector
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    // Variables to store the selected element type (vertices, edges, faces)
+    let elementType = 'vertices';
+
+    // Extruded face color
+    const extrudedColor = 0xff00ff; // Pink color
+
+    // Event listener for mouse click
+    window.addEventListener('click', onMouseClick, false);
+
+    // Function to handle mouse click event
+    function onMouseClick(event) {
+      // Calculate mouse position normalized between -1 and 1
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      // Update the picking ray with the camera and mouse position
+      raycaster.setFromCamera(mouse, camera);
+
+      // Perform raycasting to intersect with the cube
+      const intersects = raycaster.intersectObjects(scene.children);
+
+      if (intersects.length > 0) {
+        const intersection = intersects[0];
+        const face = intersection.face;
+
+        if (elementType === 'faces') {
+          // Extrude the selected face
+          extrudeFace(intersection);
+
+          // Change the color of the selected face
+          face.color.setHex(extrudedColor);
+          geometry.colorsNeedUpdate = true;
+        }
+      }
+    }
+
+    // Function to extrude a selected face
+    function extrudeFace(intersection) {
+      const face = intersection.face;
+      const distance = 0.2; // Extrusion distance
+
+      // Calculate the extrusion direction and offset
+      const normal = face.normal.clone().applyQuaternion(cube.quaternion);
+      const offset = normal.clone().multiplyScalar(distance);
+
+      // Translate the vertices of the selected face
+      const indices = face.indices;
+      for (let i = 0; i < indices.length; i++) {
+        const vertexIndex = indices[i];
+        const vertex = geometry.vertices[vertexIndex];
+        vertex.add(offset);
+      }
+
+      // Update the geometry
+      geometry.verticesNeedUpdate = true;
+    }
+
+    // Function to toggle the element type (vertices, edges, faces)
+    function toggleElementType(type) {
+      elementType = type;
+      const buttons = document.getElementsByClassName('toggle-button');
+      for (let i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+      }
+      document.getElementById(type).classList.add('active');
+    }
+
+    // Start the animation loop
+    animate();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+  </script>
+  <style>
+    .toggle-button {
+      display: inline-block;
+      padding: 5px 10px;
+      background-color: #ccc;
+      cursor: pointer;
+    }
+
+    .toggle-button.active {
+      background-color: #999;
+    }
+  </style>
+  <div>
+    <div class="toggle-button active" id="vertices" onclick="toggleElementType('vertices')">Vertices</div>
+    <div class="toggle-button" id="edges" onclick="toggleElementType('edges')">Edges</div>
+    <div class="toggle-button" id="faces" onclick="toggleElementType('faces')">Faces</div>
+  </div>
+</body>
+
+</html>

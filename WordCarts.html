@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Racing Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #word-list {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+        }
+
+        .letter {
+            color: #ffffff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <script>
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 10, 20);
+        camera.lookAt(0, 0, -100);
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        var wordList = document.createElement('div');
+        wordList.id = 'word-list';
+        document.body.appendChild(wordList);
+
+        var letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        var currentWord = '';
+        var playerInput = '';
+        var score = 0;
+        var level = 0;
+        var wordIndex = 0;
+        var speaker = new SpeechSynthesisUtterance();
+
+        var wordLevels = [
+            ['CAT', 'DOG', 'SUN', 'HAT', 'BED', 'CAR'], // Level 1 words
+            ['TREE', 'BALL', 'RAIN', 'FISH', 'CAKE', 'BOOK'], // Level 2 words
+            ['HOUSE', 'APPLE', 'BEACH', 'CHAIR', 'PLANE', 'TABLE'] // Level 3 words
+            // Add more levels and words as needed
+        ];
+
+        var currentWords = wordLevels[level];
+
+        // Create the player cube
+        var playerGeometry = new THREE.BoxGeometry(2, 2, 2);
+        var playerMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        var playerCube = new THREE.Mesh(playerGeometry, playerMaterial);
+        playerCube.position.y = 1;
+        scene.add(playerCube);
+
+        // Create opponents
+        var opponentGeometry = new THREE.BoxGeometry(2, 2, 2);
+        var opponentMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+
+        var opponents = [];
+        for (var i = 0; i < currentWords.length; i++) {
+            var opponent = new THREE.Mesh(opponentGeometry, opponentMaterial);
+
+            // Create letter texture
+            var letterCanvas = document.createElement('canvas');
+            var letterContext = letterCanvas.getContext('2d');
+            letterCanvas.width = 128;
+            letterCanvas.height = 128;
+            letterContext.fillStyle = '#ff0000';
+            letterContext.fillRect(0, 0, letterCanvas.width, letterCanvas.height);
+            letterContext.font = 'bold 64px Arial';
+            letterContext.fillStyle = '#ffffff';
+            letterContext.textAlign = 'center';
+            letterContext.textBaseline = 'middle';
+            letterContext.fillText(currentWords[i][0], letterCanvas.width / 2, letterCanvas.height / 2);
+
+            var letterTexture = new THREE.CanvasTexture(letterCanvas);
+            opponent.material = new THREE.MeshBasicMaterial({ map: letterTexture });
+
+            opponent.position.set((Math.random() * 10 - 5) * 4, 1, -i * 10 - 10);
+            scene.add(opponent);
+            opponents.push(opponent);
+        }
+
+        // Create the race track
+        var trackGeometry = new THREE.PlaneGeometry(30, 100, 1, 1);
+        var trackMaterial = new THREE.MeshBasicMaterial({ color: 0x808080, side: THREE.DoubleSide });
+        var track = new THREE.Mesh(trackGeometry, trackMaterial);
+        track.rotation.x = -Math.PI / 2;
+        scene.add(track);
+
+        // Keyboard controls
+        var moveSpeed = 0.5;
+
+        function handleKeyDown(event) {
+            switch (event.keyCode) {
+                case 37: // Left arrow
+                    playerCube.position.x -= moveSpeed;
+                    break;
+                case 39: // Right arrow
+                    playerCube.position.x += moveSpeed;
+                    break;
+                case 13: // Enter key
+                    checkWord();
+                    break;
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown, false);
+
+        // Check collision with opponents
+        function checkCollision() {
+            for (var i = 0; i < opponents.length; i++) {
+                var opponent = opponents[i];
+
+                if (playerCube.position.distanceTo(opponent.position) <= 2) {
+                    playerInput += currentWords[i][0];
+                    opponent.position.z = -i * 10 - 10;
+                    opponent.position.x = (Math.random() * 10 - 5) * 4;
+                    speaker.text = currentWords[i][0];
+                    window.speechSynthesis.speak(speaker);
+                }
+            }
+
+            updateWordList();
+        }
+
+        // Check the player's word against the current word
+        function checkWord() {
+            if (playerInput.toLowerCase() === currentWord.toLowerCase()) {
+                score++;
+                wordIndex++;
+
+                if (wordIndex >= currentWords.length) {
+                    level++;
+                    wordIndex = 0;
+
+                    if (level >= wordLevels.length) {
+                        // End of the game
+                        alert('Congratulations! You completed all levels!');
+                        return;
+                    }
+
+                    currentWords = wordLevels[level];
+                }
+
+                currentWord = currentWords[wordIndex];
+                playerInput = '';
+            } else {
+                alert('Incorrect word! Try again.');
+                playerInput = '';
+            }
+        }
+
+        // Update word list
+        function updateWordList() {
+            wordList.innerHTML = '<b>Word:</b> ' + playerInput + ' (' + currentWord + ')<br><b>Score:</b> ' + score + '<br><b>Level:</b> ' + (level + 1) + '/' + wordLevels.length + '<br><b>Words:</b> ' + currentWords.join(', ');
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            checkCollision();
+
+            for (var i = 0; i < opponents.length; i++) {
+                opponents[i].position.z += 0.2;
+
+                // Reset opponent position when they reach the end
+                if (opponents[i].position.z > 10) {
+                    opponents[i].position.z = -i * 10 - 10;
+                    opponents[i].position.x = (Math.random() * 10 - 5) * 4;
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Start the game
+        function startGame() {
+            animate();
+        }
+
+        // Call the startGame function to begin
+        startGame();
+    </script>
+</body>
+</html>

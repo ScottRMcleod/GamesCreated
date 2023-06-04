@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Word Game</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #008000;
+        }
+
+        .game-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card-deck-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            width: 50px;
+            height: 80px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            cursor: move;
+            transition: all 0.2s ease;
+            font-size: 24px;
+        }
+
+        .card:hover {
+            transform: scale(1.1);
+        }
+
+        .word-container {
+            font-size: 36px;
+            font-weight: bold;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-container {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            text-align: center;
+        }
+
+        .timer-container {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .year-select-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center text-white">Word Game</h1>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="game-container">
+                    <div>
+                        <div id="wordContainer" class="word-container"></div>
+                        <div id="cardDeckContainer" class="card-deck-container"></div>
+                        <button id="checkButton" class="btn btn-success">Check</button>
+                        <button id="shuffleButton" class="btn btn-primary">Shuffle</button>
+                        <button id="speakButton" class="btn btn-info">Speak</button>
+                        <button id="speakWordButton" class="btn btn-info">Speak Word</button>
+                        <div id="resultContainer" class="result-container"></div>
+                        <div id="timerContainer" class="timer-container"></div>
+                        <div id="yearSelectContainer" class="year-select-container">
+                            <label for="yearSelect">Select Year:</label>
+                            <select id="yearSelect" class="form-control">
+                                <option value="0">Kindergarten</option>
+                                <option value="1">Year 1</option>
+                                <option value="2">Year 2</option>
+                                <option value="3">Year 3</option>
+                                <option value="4">Year 4</option>
+                                <option value="5">Year 5</option>
+                                <option value="6">Year 6</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var words = [
+            ["apple", "banana", "orange", "grape", "strawberry"], // Kindergarten
+            ["cat", "dog", "bird", "fish", "turtle"], // Year 1
+            ["tree", "flower", "grass", "sun", "rain"], // Year 2
+            ["book", "pencil", "paper", "desk", "chair"], // Year 3
+            ["computer", "keyboard", "mouse", "monitor", "printer"], // Year 4
+            ["planet", "galaxy", "star", "moon", "rocket"], // Year 5
+            ["mathematics", "science", "history", "geography", "language"] // Year 6
+        ];
+        var currentWordIndex = 0;
+        var jumbledWord = '';
+        var startTime;
+        var timerInterval;
+        var selectedYear = 0;
+
+        // Function to shuffle the letters of a word
+        function shuffle(word) {
+            var shuffledWord = '';
+            var wordArray = word.split('');
+            while (wordArray.length > 0) {
+                shuffledWord += wordArray.splice(Math.floor(Math.random() * wordArray.length), 1);
+            }
+            return shuffledWord;
+        }
+
+        // Function to update the word on the page
+        function updateWord() {
+            var wordContainer = document.getElementById('wordContainer');
+            wordContainer.textContent = words[selectedYear][currentWordIndex];
+            document.getElementById('resultContainer').textContent = '';
+            resetTimer();
+        }
+
+        // Function to create selectable cards
+        function createSelectableCards() {
+            var cardDeckContainer = document.getElementById('cardDeckContainer');
+            cardDeckContainer.innerHTML = '';
+
+            for (var i = 0; i < words[selectedYear][currentWordIndex].length; i++) {
+                var card = document.createElement('div');
+                card.textContent = words[selectedYear][currentWordIndex][i];
+                card.className = 'card';
+                card.dataset.index = i;
+                card.draggable = true;
+                card.addEventListener('dragstart', dragStart);
+                card.addEventListener('dragover', dragOver);
+                card.addEventListener('drop', drop);
+                cardDeckContainer.appendChild(card);
+            }
+        }
+
+        // Drag and drop functions
+        function dragStart(event) {
+            event.dataTransfer.setData('text/plain', event.target.dataset.index);
+        }
+
+        function dragOver(event) {
+            event.preventDefault();
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            var sourceIndex = event.dataTransfer.getData('text/plain');
+            var targetIndex = event.target.dataset.index;
+
+            var cardDeckContainer = document.getElementById('cardDeckContainer');
+            var cardElements = cardDeckContainer.querySelectorAll('.card');
+
+            var tempText = cardElements[sourceIndex].textContent;
+            cardElements[sourceIndex].textContent = cardElements[targetIndex].textContent;
+            cardElements[targetIndex].textContent = tempText;
+        }
+
+        // Function to speak a word
+        function speakWord(word) {
+            var synth = window.speechSynthesis;
+            var utterance = new SpeechSynthesisUtterance(word);
+            synth.speak(utterance);
+        }
+
+        // Function to start the timer
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // Function to update the timer
+        function updateTimer() {
+            var timerContainer = document.getElementById('timerContainer');
+            var elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            timerContainer.textContent = 'Time: ' + elapsedTime + 's';
+        }
+
+        // Function to reset the timer
+        function resetTimer() {
+            clearInterval(timerInterval);
+            var timerContainer = document.getElementById('timerContainer');
+            timerContainer.textContent = 'Time: 0s';
+        }
+
+        // Function to check the word
+        function checkWord() {
+            var wordContainer = document.getElementById('wordContainer');
+            var selectedWord = wordContainer.textContent;
+            var cardDeckContainer = document.getElementById('cardDeckContainer');
+            var cardElements = cardDeckContainer.querySelectorAll('.card');
+            var userWord = '';
+
+            for (var i = 0; i < cardElements.length; i++) {
+                userWord += cardElements[i].textContent;
+            }
+
+            if (selectedWord === userWord) {
+                document.getElementById('resultContainer').textContent = 'Correct!';
+                speakWord(words[selectedYear][currentWordIndex]);
+                currentWordIndex++;
+                if (currentWordIndex < words[selectedYear].length) {
+                    updateWord();
+                    createSelectableCards();
+                } else {
+                    document.getElementById('resultContainer').textContent = 'Game Over';
+                }
+            } else {
+                document.getElementById('resultContainer').textContent = 'Try Again';
+            }
+        }
+
+        // Function to shuffle the word
+        function shuffleWord() {
+            var wordContainer = document.getElementById('wordContainer');
+            var selectedWord = wordContainer.textContent;
+            var shuffledWord = shuffle(selectedWord);
+
+            wordContainer.textContent = shuffledWord;
+        }
+
+        // Function to speak the jumbled word
+        function speakJumbledWord() {
+            var wordContainer = document.getElementById('wordContainer');
+            var selectedWord = wordContainer.textContent;
+
+            speakWord(selectedWord);
+        }
+
+        // Function to handle year selection change
+        function handleYearSelectChange() {
+            selectedYear = parseInt(document.getElementById('yearSelect').value);
+            currentWordIndex = 0;
+            updateWord();
+            createSelectableCards();
+        }
+
+        // Initialize the game
+        updateWord();
+        createSelectableCards();
+
+        // Add event listeners to buttons
+        document.getElementById('checkButton').addEventListener('click', checkWord);
+        document.getElementById('shuffleButton').addEventListener('click', shuffleWord);
+        document.getElementById('speakButton').addEventListener('click', speakJumbledWord);
+        document.getElementById('speakWordButton').addEventListener('click', function () {
+            speakWord(words[selectedYear][currentWordIndex]);
+        });
+
+        // Add event listener to year select
+        document.getElementById('yearSelect').addEventListener('change', handleYearSelectChange);
+    </script>
+</body>
+</html>

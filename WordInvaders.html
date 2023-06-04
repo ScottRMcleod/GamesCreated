@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Space Invaders Word Game</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #000;
+        }
+
+        .game-container {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            margin: 0 auto;
+        }
+
+        .player {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 30px;
+            background-color: #fff;
+        }
+
+        .letter {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+            border-radius: 50%;
+        }
+
+        .bullet {
+            position: absolute;
+            width: 5px;
+            height: 10px;
+            background-color: #fff;
+        }
+
+        .word-container {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center text-white">Space Invaders Word Game</h1>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="game-container">
+                    <div id="lettersContainer"></div>
+                    <div id="player" class="player"></div>
+                    <div id="bullet" class="bullet"></div>
+                    <div id="wordContainer" class="word-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var words = [
+            { word: "apple" },
+            { word: "banana" },
+            { word: "orange" },
+            { word: "grape" },
+            { word: "strawberry" }
+        ];
+        var currentWordIndex = 0;
+        var letters = [];
+        var player = document.getElementById('player');
+        var bullet = document.getElementById('bullet');
+        var wordContainer = document.getElementById('wordContainer');
+        var currentWord = words[currentWordIndex].word.toLowerCase();
+        var score = 0;
+        var gameInterval;
+        var bulletInterval;
+        var bulletSpeed = 5;
+        var bulletPosition = 0;
+
+        function createLetters() {
+            var lettersContainer = document.getElementById('lettersContainer');
+            lettersContainer.innerHTML = '';
+
+            var wordLength = currentWord.length;
+            var containerWidth = lettersContainer.offsetWidth;
+            var startX = (containerWidth - (wordLength * 30 + (wordLength - 1) * 10)) / 2;
+            var startY = 10;
+
+            for (var i = 0; i < wordLength; i++) {
+                var letter = document.createElement('div');
+                letter.textContent = currentWord[i];
+                letter.className = 'letter';
+                letter.style.left = startX + (i * 40) + 'px';
+                letter.style.top = startY + 'px';
+                lettersContainer.appendChild(letter);
+                letters.push({ element: letter, x: startX + (i * 40), y: startY });
+            }
+        }
+
+        function moveLetters() {
+            for (var i = 0; i < letters.length; i++) {
+                var letter = letters[i];
+                letter.y += 2;
+                letter.element.style.top = letter.y + 'px';
+
+                if (letter.y + letter.element.offsetHeight >= player.offsetTop) {
+                    gameOver();
+                    break;
+                }
+            }
+        }
+
+        function movePlayer(direction) {
+            var playerLeft = player.offsetLeft;
+            var containerWidth = player.parentElement.offsetWidth;
+            var playerWidth = player.offsetWidth;
+
+            if (direction === 'left' && playerLeft > 0) {
+                player.style.left = (playerLeft - 10) + 'px';
+            } else if (direction === 'right' && playerLeft + playerWidth < containerWidth) {
+                player.style.left = (playerLeft + 10) + 'px';
+            }
+        }
+
+        function shootBullet() {
+            bullet.style.left = player.offsetLeft + player.offsetWidth / 2 + 'px';
+            bulletPosition = player.offsetTop;
+
+            bulletInterval = setInterval(function () {
+                bulletPosition -= bulletSpeed;
+                bullet.style.top = bulletPosition + 'px';
+
+                if (bulletPosition < 0) {
+                    clearInterval(bulletInterval);
+                    bullet.style.top = '-20px';
+                }
+
+                var bulletLeft = bullet.offsetLeft;
+                var bulletRight = bulletLeft + bullet.offsetWidth;
+                var bulletTop = bullet.offsetTop;
+                var bulletBottom = bulletTop + bullet.offsetHeight;
+
+                for (var i = 0; i < letters.length; i++) {
+                    var letter = letters[i];
+                    var letterLeft = letter.x;
+                    var letterRight = letter.x + letter.element.offsetWidth;
+                    var letterTop = letter.y;
+                    var letterBottom = letter.y + letter.element.offsetHeight;
+
+                    if (
+                        bulletLeft >= letterLeft && bulletLeft <= letterRight &&
+                        bulletTop >= letterTop && bulletTop <= letterBottom
+                    ) {
+                        letter.element.remove();
+                        letters.splice(i, 1);
+                        clearInterval(bulletInterval);
+                        bullet.style.top = '-20px';
+
+                        if (letters.length === 0) {
+                            score++;
+                            updateScore();
+                            currentWordIndex++;
+
+                            if (currentWordIndex < words.length) {
+                                startLevel();
+                            } else {
+                                gameWin();
+                            }
+                        }
+                        break;
+                    }
+                }
+            }, 10);
+        }
+
+        function updateScore() {
+            wordContainer.textContent = 'Score: ' + score;
+        }
+
+        function updateWord() {
+            currentWord = words[currentWordIndex].word.toLowerCase();
+            wordContainer.textContent = 'Score: ' + score + '  Word: ' + currentWord;
+        }
+
+        function startLevel() {
+            letters = [];
+            bullet.style.top = '-20px';
+            updateWord();
+            createLetters();
+            gameInterval = setInterval(moveLetters, 100);
+        }
+
+        function gameOver() {
+            clearInterval(gameInterval);
+            clearInterval(bulletInterval);
+            alert('Game Over! Your final score is: ' + score);
+        }
+
+        function gameWin() {
+            clearInterval(gameInterval);
+            clearInterval(bulletInterval);
+            alert('Congratulations! You won the game with a score of: ' + score);
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.code === 'Space') {
+                shootBullet();
+            } else if (event.code === 'ArrowLeft') {
+                movePlayer('left');
+            } else if (event.code === 'ArrowRight') {
+                movePlayer('right');
+            }
+        });
+
+        startLevel();
+    </script>
+</body>
+</html>
