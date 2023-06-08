@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Interactive Three.js Scene</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-image: url('background.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+<div id="score" style="position: absolute; top: 10px; left: 550px; color: white; font-size: 24px;"></div>
+    <div id="menu" style="position: absolute; top: 10px; left: 10px;">
+      <button onclick="createLevel()">Create Level</button>
+      <button onclick="playLevel()">Play</button>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/OrbitControls.js"></script>
+    <script>
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      let isCreatingLevel = false;
+      let isPlaying = false;
+      let objectsToPlace = [];
+      let player;
+      let spheres = [];
+       let score = 0;
+      const scoreElement = document.getElementById('score');
+
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, opacity: 0.4, transparent: true });
+      const cube = new THREE.Mesh(geometry, material);
+      scene.add(cube);
+
+      const groundGeometry = new THREE.PlaneGeometry(600, 600);
+      const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x808080, opacity: 0.4, transparent: true, side: THREE.DoubleSide });
+      const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+      ground.rotation.x = Math.PI / 2;
+      ground.position.y = -0.5;
+      scene.add(ground);
+
+      const sphereGeometry = new THREE.SphereGeometry(0.2, 32, 32);
+      const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff, opacity: 0.9, transparent: true });
+
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+      function createLevel() {
+        isCreatingLevel = true;
+        isPlaying = false;
+        objectsToPlace = [];
+
+        const cylinderGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 32);
+        const cylinderMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+        cylinder.position.set(-2, 0.5, 0);
+        objectsToPlace.push(cylinder);
+        scene.add(cylinder);
+
+        const pyramidGeometry = new THREE.ConeGeometry(0.5, 1, 4);
+        const pyramidMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        const pyramid = new THREE.Mesh(pyramidGeometry, pyramidMaterial);
+        pyramid.position.set(2, 0.5, 0);
+objectsToPlace.push(pyramid);
+scene.add(pyramid);
+    const enemyGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+    const enemyMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff });
+    const enemy = new THREE.Mesh(enemyGeometry, enemyMaterial);
+    enemy.position.set(0, 0.4, 2);
+    objectsToPlace.push(enemy);
+    scene.add(enemy);
+  }
+
+  function playLevel() {
+    isCreatingLevel = false;
+    isPlaying = true;
+    objectsToPlace.forEach(obj => scene.remove(obj));
+    objectsToPlace = [];
+
+    cube.position.set(0, 0.5, -4);
+    scene.add(cube);
+
+    score = 0;
+
+    for (let i = 0; i < 10; i++) {
+      const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      sphere.position.x = Math.random() * 10 - 5;
+      sphere.position.z = Math.random() * 10 - 5;
+      sphere.velocity = new THREE.Vector3((Math.random() - 0.5) * 0.1, 0, (Math.random() - 0.5) * 0.1);
+      scene.add(sphere);
+      spheres.push(sphere);
+    }
+  }
+
+  function handleMouseDown(event) {
+    if (!isCreatingLevel) return;
+
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects(objectsToPlace);
+    if (intersects.length > 0) {
+      const object = intersects[0].object.clone();
+      object.position.copy(intersects[0].point);
+      objectsToPlace.push(object);
+      scene.add(object);
+    }
+  }
+
+  function handleKeyDown(event) {
+    if (!isPlaying) return;
+
+    const moveDistance = 0.7;
+
+    switch (event.key) {
+      case 'ArrowUp':
+        cube.position.z -= moveDistance;
+        break;
+      case 'ArrowDown':
+        cube.position.z += moveDistance;
+        break;
+      case 'ArrowLeft':
+        cube.position.x -= moveDistance;
+        break;
+      case 'ArrowRight':
+        cube.position.x += moveDistance;
+        break;
+      case ' ':
+        cube.position.y += moveDistance;
+        break;
+    }
+  }
+
+  function updateSpherePositions() {
+    spheres.forEach(sphere => {
+      sphere.position.add(sphere.velocity);
+
+      if (sphere.position.y < 0.1 || sphere.position.y > 2) {
+        sphere.velocity.y *= -1;
+      }
+    });
+  }
+
+  function checkSphereCollision() {
+    for (let i = 0; i < spheres.length; i++) {
+      const sphere = spheres[i];
+      if (sphere.visible && cube.position.distanceTo(sphere.position) < 0.5) {
+        sphere.visible = false;
+        score++;
+scoreElement.textContent = 'Score: ' + score;
+        console.log('Score:', score);
+      }
+    }
+  }
+
+function animate() {
+        requestAnimationFrame(animate);
+        checkSphereCollision();
+     
+         for (let i = 0; i < spheres.length; i++) {
+    const sphere = spheres[i];
+    const velocity = sphere.velocity;
+
+    // Update sphere position based on velocity
+    sphere.position.add(velocity);
+
+    // Apply gravity
+    velocity.y -= 0.01;
+
+    // Check for collision with ground
+    if (sphere.position.y < 0.1) {
+      sphere.position.y = 0.1;
+      velocity.y *= -0.9; // Reverse velocity and apply damping
+    }
+
+    // Check for collision with walls
+    if (sphere.position.x < -4.5 || sphere.position.x > 4.5) {
+      velocity.x *= -1; // Reverse velocity
+     // sphere.material.color.setHex(Math.random() * 0xffffff); // Random color
+    }
+
+    if (sphere.position.z < -4.5 || sphere.position.z > 4.5) {
+      velocity.z *= -1; // Reverse velocity
+      //sphere.material.color.setHex(Math.random() * 0xffffff); // Random color
+    }
+    }
+        renderer.render(scene, camera);
+      }
+
+  function init() {
+    camera.position.z = 5;
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('keydown', handleKeyDown);
+    animate();
+  }
+
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive Three.js Scene</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-image: url('background.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <div id="score" style="position: absolute; top: 10px; left: 550px; color: white; font-size: 24px;"></div>
+  <div id="menu" style="position: absolute; top: 10px; left: 10px;">
+    <button onclick="createLevel()">Create Level</button>
+    <button onclick="playLevel()">Play</button>
+    <input type="file" id="heightmapInput" accept=".png, .jpg, .jpeg" />
+    <button onclick="addEffect('lake')">Add Lake</button>
+    <button onclick="addEffect('river')">Add River</button>
+    <button onclick="addEffect('rain')">Add Rain</button>
+    <button onclick="addEffect('snow')">Add Snow</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/OrbitControls.js"></script>
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    let isCreatingLevel = false;
+    let isPlaying = false;
+    let objectsToPlace = [];
+    let player;
+    let spheres = [];
+    let score = 0;
+    const scoreElement = document.getElementById('score');
+
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, opacity: 0.4, transparent: true });
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+
+    const groundGeometry = new THREE.PlaneGeometry(600, 600);
+    const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x808080, opacity: 0.4, transparent: true, side: THREE.DoubleSide });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = Math.PI / 2;
+    ground.position.y = -0.5;
+    scene.add(ground);
+
+    const sphereGeometry = new THREE.SphereGeometry(0.2, 32, 32);
+    const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff, opacity: 0.9, transparent: true });
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+    // Scene setup
+    camera.position.set(0, 10, 200);
+    camera.lookAt(scene.position);
+
+    // Terrain settings
+    const terrainSize = 200;
+    const terrainResolution = 128;
+    const brushSize = 10;
+    const brushStrength = 50;
+    const terrainGeometry = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainResolution, terrainResolution);
+    const terrainMaterial = new THREE.MeshBasicMaterial({ color: 0x5a5a5a, wireframe: true });
+    const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
+    terrain.rotation.x = -Math.PI / 2;
+    scene.add(terrain);
+
+    // Event listeners
+    document.addEventListener('mousedown', onMouseDown, false);
+    document.addEventListener('mousemove', onMouseMove, false);
+    document.addEventListener('mouseup', onMouseUp, false);
+    document.getElementById('heightmapInput').addEventListener('change', handleHeightmapInput, false);
+
+    function onMouseDown(event) {
+      if (isCreatingLevel) {
+        const intersects = raycaster.intersectObjects(objectsToPlace);
+        if (intersects.length > 0) {
+          const intersect = intersects[0];
+          const clone = cube.clone();
+          clone.position.copy(intersect.point).add(intersect.face.normal);
+          clone.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+          scene.add(clone);
+          objectsToPlace.push(clone);
+        }
+      }
+    }
+
+    function onMouseMove(event) {
+      event.preventDefault();
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      if (isCreatingLevel) {
+        const intersects = raycaster.intersectObjects([ground]);
+        if (intersects.length > 0) {
+          const intersect = intersects[0];
+          cube.position.copy(intersect.point).add(intersect.face.normal);
+          cube.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+        }
+      }
+    }
+
+    function onMouseUp(event) {
+      if (isCreatingLevel) {
+        const intersects = raycaster.intersectObjects([ground]);
+        if (intersects.length > 0) {
+          const intersect = intersects[0];
+          const clone = cube.clone();
+          clone.position.copy(intersect.point).add(intersect.face.normal);
+          clone.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+          scene.add(clone);
+          objectsToPlace.push(clone);
+        }
+      }
+    }
+
+    function createLevel() {
+      isCreatingLevel = !isCreatingLevel;
+      cube.visible = isCreatingLevel;
+      if (!isCreatingLevel) {
+        objectsToPlace = [];
+      }
+    }
+
+    function playLevel() {
+      if (isPlaying) {
+        isPlaying = false;
+        document.removeEventListener('keydown', onKeyDown, false);
+      } else {
+        isPlaying = true;
+        document.addEventListener('keydown', onKeyDown, false);
+      }
+    }
+
+    function onKeyDown(event) {
+      const keyCode = event.keyCode;
+      const moveDistance = 10;
+      const rotateAngle = Math.PI / 4;
+
+      switch (keyCode) {
+        case 37: // Left arrow
+          player.position.x -= moveDistance;
+          break;
+        case 39: // Right arrow
+          player.position.x += moveDistance;
+          break;
+        case 38: // Up arrow
+          player.position.z -= moveDistance;
+          break;
+        case 40: // Down arrow
+          player.position.z += moveDistance;
+          break;
+        case 65: // A
+          player.rotation.y += rotateAngle;
+          break;
+        case 68: // D
+          player.rotation.y -= rotateAngle;
+          break;
+        case 87: // W
+          const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+          sphere.position.copy(player.position);
+          scene.add(sphere);
+          spheres.push(sphere);
+          break;
+        case 83: // S
+          if (spheres.length > 0) {
+            const lastSphere = spheres[spheres.length - 1];
+            scene.remove(lastSphere);
+            spheres.pop();
+          }
+          break;
+      }
+    }
+
+    function handleHeightmapInput(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.onload = function () {
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          context.drawImage(img, 0, 0, img.width, img.height);
+          const imageData = context.getImageData(0, 0, img.width, img.height).data;
+          const vertices = terrain.geometry.vertices;
+
+          for (let i = 0; i < vertices.length; i++) {
+            const vertex = vertices[i];
+            const x = Math.floor((vertex.x / terrainSize + 0.5) * img.width);
+            const y = Math.floor((vertex.z / terrainSize + 0.5) * img.height);
+            const pixelIndex = (y * img.width + x) * 4;
+            const r = imageData[pixelIndex];
+            const g = imageData[pixelIndex + 1];
+            const b = imageData[pixelIndex + 2];
+            const brightness = (r + g + b) / (255 * 3);
+            vertex.y = brightness * brushStrength;
+          }
+
+          terrain.geometry.verticesNeedUpdate = true;
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function addEffect(effect) {
+      switch (effect) {
+        case 'lake':
+          const lakeGeometry = new THREE.CylinderGeometry(50, 50, 5, 32);
+          const lakeMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, opacity: 0.4, transparent: true });
+          const lake = new THREE.Mesh(lakeGeometry, lakeMaterial);
+          lake.position.y = -4.5;
+          scene.add(lake);
+          break;
+        case 'river':
+          const riverGeometry = new THREE.BoxGeometry(100, 2, 10);
+          const riverMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, opacity: 0.4, transparent: true });
+          const river = new THREE.Mesh(riverGeometry, riverMaterial);
+          river.position.y = -3;
+          scene.add(river);
+          break;
+        case 'rain':
+          const rainGeometry = new THREE.Geometry();
+          for (let i = 0; i < 100; i++) {
+            const rainDrop = new THREE.Vector3(
+              Math.random() * 200 - 100,
+              Math.random() * 100,
+              Math.random() * 200 - 100
+            );
+            rainGeometry.vertices.push(rainDrop);
+          }
+          const rainMaterial = new THREE.PointsMaterial({ color: 0x0000ff, size: 0.2, opacity: 0.4, transparent: true });
+          const rain = new THREE.Points(rainGeometry, rainMaterial);
+          scene.add(rain);
+          break;
+        case 'snow':
+          const snowGeometry = new THREE.Geometry();
+          for (let i = 0; i < 100; i++) {
+            const snowFlake = new THREE.Vector3(
+              Math.random() * 200 - 100,
+              Math.random() * 100,
+              Math.random() * 200 - 100
+            );
+            snowGeometry.vertices.push(snowFlake);
+          }
+          const snowMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, opacity: 0.6, transparent: true });
+          const snow = new THREE.Points(snowGeometry, snowMaterial);
+          scene.add(snow);
+          break;
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (isPlaying) {
+        // Update player position based on keyboard input
+        // ...
+
+        // Update score based on player position
+        // ...
+        scoreElement.innerHTML = 'Score: ' + score;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
