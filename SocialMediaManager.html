@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Social Media Management App</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">Social Media Management App</a>
+  </nav>
+
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-4">
+        <h3>Company Selection</h3>
+        <select id="companyDropdown" class="form-control">
+          <option value="1">Company A</option>
+          <option value="2">Company B</option>
+          <option value="3">Company C</option>
+        </select>
+
+        <h3 class="mt-4">Social Media Accounts</h3>
+        <ul id="accountList">
+          <!-- Accounts will be populated dynamically -->
+        </ul>
+      </div>
+
+      <div class="col-md-8">
+        <h3>Add Content</h3>
+        <form id="addContentForm">
+          <div class="form-group">
+            <textarea id="contentInput" class="form-control" rows="5" placeholder="Enter content"></textarea>
+          </div>
+
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary">Add Content</button>
+          </div>
+        </form>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card mt-4">
+              <div class="card-body">
+                <h5 class="card-title">Sales Analytics</h5>
+                <div id="salesAnalytics">
+                  <!-- Sales analytics charts will be displayed here -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="card mt-4">
+              <div class="card-body">
+                <h5 class="card-title">Traffic Reports</h5>
+                <div id="trafficReports">
+                  <!-- Traffic reports will be displayed here -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-body">
+            <h5 class="card-title">Audience Engagement</h5>
+            <div id="audienceEngagement">
+              <button id="replyBtn" class="btn btn-primary"><i class="fas fa-reply"></i> Reply to Audience</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-body">
+            <h5 class="card-title">Content Scheduling</h5>
+            <form id="contentSchedulingForm">
+              <div class="form-group">
+                <label for="platformSelect">Platform:</label>
+                <select id="platformSelect" class="form-control">
+                  <option value="all">All Platforms</option>
+                  <option value="tiktok"><i class="fab fa-tiktok"></i> TikTok</option>
+                  <option value="youtube"><i class="fab fa-youtube"></i> YouTube</option>
+                  <option value="instagram"><i class="fab fa-instagram"></i> Instagram</option>
+                  <option value="facebook"><i class="fab fa-facebook"></i> Facebook</option>
+                  <option value="twitter"><i class="fab fa-twitter"></i> Twitter</option>
+                  <option value="linkedin"><i class="fab fa-linkedin"></i> LinkedIn</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="scheduleInput">Schedule:</label>
+                <input type="datetime-local" id="scheduleInput" class="form-control">
+              </div>
+
+              <div class="form-group">
+                <button type="submit" class="btn btn-primary">Schedule Content</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.28.3/dist/apexcharts.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      // Load social media accounts for the selected company
+      function loadAccounts(companyId) {
+        var accounts = [
+          { id: 1, name: 'Facebook', icon: 'fab fa-facebook' },
+          { id: 2, name: 'Twitter', icon: 'fab fa-twitter' },
+          { id: 3, name: 'Instagram', icon: 'fab fa-instagram' },
+          { id: 4, name: 'TikTok', icon: 'fab fa-tiktok' },
+          { id: 5, name: 'YouTube', icon: 'fab fa-youtube' },
+          { id: 6, name: 'LinkedIn', icon: 'fab fa-linkedin' }
+        ];
+
+        var accountList = $('#accountList');
+        accountList.empty();
+
+        $.each(accounts, function(index, account) {
+          var icon = $('<i></i>').addClass(account.icon);
+          var checkbox = $('<input>').attr('type', 'checkbox').attr('value', account.id);
+          var listItem = $('<li></li>').append(icon, account.name).prepend(checkbox);
+          accountList.append(listItem);
+        });
+      }
+
+      // Event listener for company selection change
+      $('#companyDropdown').on('change', function() {
+        var companyId = $(this).val();
+        loadAccounts(companyId);
+      });
+
+      // Simulated function to add content to selected social media accounts
+      function addContent() {
+        console.log('Content added:', $('#contentInput').val());
+      }
+
+      // Event listener for adding content
+      $('#addContentForm').on('submit', function(event) {
+        event.preventDefault();
+        addContent();
+      });
+
+      // Simulated function to fetch sales analytics data
+      function fetchSalesAnalytics() {
+        var salesData = {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          series: [
+            [100, 200, 150, 300, 250, 400]
+          ]
+        };
+
+        var salesAnalytics = $('#salesAnalytics');
+
+        var chartOptions = {
+          chart: {
+            type: 'line',
+            height: 350
+          },
+          series: [{
+            name: 'Sales',
+            data: salesData.series[0]
+          }],
+          xaxis: {
+            categories: salesData.labels
+          }
+        };
+
+        new ApexCharts(salesAnalytics[0], chartOptions).render();
+      }
+
+      // Simulated function to fetch traffic reports
+      function fetchTrafficReports() {
+        var trafficData = {
+          labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+          series: [
+            [100, 200, 150, 300, 250, 400, 350]
+          ]
+        };
+
+        var trafficReports = $('#trafficReports');
+
+        var chartOptions = {
+          chart: {
+            type: 'bar',
+            height: 350
+          },
+          series: [{
+            name: 'Traffic',
+            data: trafficData.series[0]
+          }],
+          xaxis: {
+            categories: trafficData.labels
+          }
+        };
+
+        new ApexCharts(trafficReports[0], chartOptions).render();
+      }
+
+      // Fetch sales analytics and traffic reports on page load
+      fetchSalesAnalytics();
+      fetchTrafficReports();
+    });
+  </script>
+</body>
+</html>

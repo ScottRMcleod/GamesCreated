@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>YouTube Content Creator Page</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="https://vjs.zencdn.net/7.14.3/video-js.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">YouTube Content Creator Page</a>
+  </nav>
+
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-6">
+        <h3>Create or Upload New Video</h3>
+        <form id="videoForm">
+          <div class="form-group">
+            <input type="text" id="titleInput" class="form-control" placeholder="Video Title">
+          </div>
+
+          <div class="form-group">
+            <textarea id="descriptionInput" class="form-control" rows="5" placeholder="Video Description"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="videoUpload">Upload Video:</label>
+            <input type="file" id="videoUpload" class="form-control-file">
+          </div>
+
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary">Create/Upload Video</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="col-md-6">
+        <h3>Video Details</h3>
+        <div id="videoDetails">
+          <div class="form-group">
+            <label for="transcriptionInput">Transcription:</label>
+            <textarea id="transcriptionInput" class="form-control" rows="5" placeholder="Transcription"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="videoClipInput">Edit Video Clip:</label>
+            <input type="text" id="videoClipInput" class="form-control" placeholder="Video Clip Time">
+          </div>
+
+          <div class="form-group">
+            <button id="editVideoBtn" class="btn btn-primary">Edit Video Clip</button>
+          </div>
+
+          <div class="form-group">
+            <label>Video Thumbnail:</label>
+            <img id="thumbnailImage" src="#" alt="Video Thumbnail" class="img-fluid">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12 mt-4">
+        <div id="videoPlayer" class="video-js vjs-default-skin"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <script src="https://vjs.zencdn.net/7.14.3/video.js"></script>
+  <script>
+    $(document).ready(function() {
+      var player = videojs('videoPlayer', {
+        controls: true,
+        fluid: true,
+        aspectRatio: '16:9'
+      });
+
+      // Event listener for video form submission
+      $('#videoForm').on('submit', function(event) {
+        event.preventDefault();
+        var title = $('#titleInput').val();
+        var description = $('#descriptionInput').val();
+        // Handle video upload logic here
+        console.log('Video uploaded/created:', title, description);
+      });
+
+      // Event listener for editing video clip
+      $('#editVideoBtn').on('click', function() {
+        var videoClipTime = $('#videoClipInput').val();
+        // Handle video editing logic here
+        console.log('Video clip edited:', videoClipTime);
+      });
+
+      // Simulated function to generate thumbnail for uploaded or created video
+      function generateThumbnail(video) {
+        var thumbnailImage = $('#thumbnailImage');
+        thumbnailImage.attr('src', '#'); // Set the thumbnail image URL
+        thumbnailImage.show();
+      }
+
+      // Event listener for video upload
+      $('#videoUpload').on('change', function() {
+        var file = $(this).prop('files')[0];
+        // Handle video upload logic here
+        generateThumbnail(file);
+
+        // Load the uploaded video into the player
+        player.src(URL.createObjectURL(file));
+      });
+    });
+  </script>
+</body>
+</html>
