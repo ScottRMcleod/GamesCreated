@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Terrain</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    #game-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    let camera, scene, renderer;
+    let isCreatingLevel = true;
+    let isPlaying = false;
+    const objectsToPlace = [];
+    const spheres = [];
+    const mouse = new THREE.Vector2();
+    const raycaster = new THREE.Raycaster();
+    let player;
+    let terrainMesh;
+
+    function createLevel() {
+      isCreatingLevel = true;
+      isPlaying = false;
+      scene = new THREE.Scene();
+
+      // Create terrain
+      const terrainSize = 40;
+      const terrainResolution = 64;
+      const terrainHeightmap = generateHeightmap(terrainResolution);
+      const terrainGeometry = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainResolution - 1, terrainResolution - 1);
+      const terrainMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+      terrainMesh = new THREE.Mesh(terrainGeometry, terrainMaterial);
+      terrainMesh.rotateX(-Math.PI / 2);
+      scene.add(terrainMesh);
+
+      // Create mountains
+      const mountainCount = 10;
+      const mountainRadius = 5;
+      const mountainHeight = 2;
+      for (let i = 0; i < mountainCount; i++) {
+        const mountain = generateMountain(mountainRadius, mountainHeight, terrainHeightmap, terrainSize, terrainResolution);
+        scene.add(mountain);
+      }
+
+      // Create hills
+      const hillCount = 10;
+      const hillRadius = 4;
+      const hillHeight = 1;
+      for (let i = 0; i < hillCount; i++) {
+        const hill = generateHill(hillRadius, hillHeight, terrainHeightmap, terrainSize, terrainResolution);
+        scene.add(hill);
+      }
+
+      // Create valleys
+      const valleyCount = 10;
+      const valleyRadius = 6;
+      const valleyDepth = -1;
+      for (let i = 0; i < valleyCount; i++) {
+        const valley = generateValley(valleyRadius, valleyDepth, terrainHeightmap, terrainSize, terrainResolution);
+        scene.add(valley);
+      }
+
+      // Create caves
+      const caveCount = 5;
+      const caveRadius = 3;
+      const caveDepth = -1;
+      for (let i = 0; i < caveCount; i++) {
+        const cave = generateCave(caveRadius, caveDepth, terrainHeightmap, terrainSize, terrainResolution);
+        scene.add(cave);
+      }
+
+      // Create lakes
+      const lakeCount = 5;
+      const lakeRadius = 4;
+      const lakeDepth = -0.5;
+      for (let i = 0; i < lakeCount; i++) {
+        const lake = generateLake(lakeRadius, lakeDepth, terrainHeightmap, terrainSize, terrainResolution);
+        scene.add(lake);
+      }
+
+      // Create plains
+      const plainCount = 20;
+      const plainRadius = 2;
+      const plainHeight = 0.5;
+      for (let i = 0; i < plainCount; i++) {
+        const plain = generatePlain(plainRadius, plainHeight, terrainHeightmap, terrainSize, terrainResolution);
+        scene.add(plain);
+      }
+
+      // Create player
+      const playerGeometry = new THREE.SphereGeometry(0.2, 32, 32);
+      const playerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+      player = new THREE.Mesh(playerGeometry, playerMaterial);
+      player.position.set(0, 0.2, 0);
+      scene.add(player);
+
+      // Create spheres
+      for (let i = 0; i < 10; i++) {
+        const sphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+        const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.position.set(Math.random() * terrainSize - terrainSize / 2, 0.2, Math.random() * terrainSize - terrainSize / 2);
+        scene.add(sphere);
+        spheres.push(sphere);
+      }
+
+      // Create camera
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 10, 20);
+
+      // Create renderer
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.getElementById('game-container').appendChild(renderer.domElement);
+
+      document.addEventListener('mousemove', onMouseMove, false);
+      document.addEventListener('mousedown', onMouseDown, false);
+    }
+
+    function generateHeightmap(resolution) {
+      const heightmap = [];
+      for (let i = 0; i < resolution; i++) {
+        heightmap[i] = [];
+        for (let j = 0; j < resolution; j++) {
+          heightmap[i][j] = 0;
+        }
+      }
+      return heightmap;
+    }
+
+    function generateMountain(radius, height, heightmap, terrainSize, terrainResolution) {
+      const mountainGeometry = new THREE.ConeGeometry(radius, height, 132);
+      const mountainMaterial = new THREE.MeshBasicMaterial({ color: 0x996600, wireframe: true });
+      const mountain = new THREE.Mesh(mountainGeometry, mountainMaterial);
+      const x = Math.random() * terrainSize - terrainSize / 2;
+      const z = Math.random() * terrainSize - terrainSize / 2;
+      const heightOffset = terrainSize / terrainResolution / 2;
+      const i = Math.floor((x + terrainSize / 2) / terrainSize * (terrainResolution - 1));
+      const j = Math.floor((z + terrainSize / 2) / terrainSize * (terrainResolution - 1));
+      mountain.position.set(x, heightmap[i][j] + height / 2 + heightOffset, z);
+      return mountain;
+    }
+
+    function generateHill(radius, height, heightmap, terrainSize, terrainResolution) {
+      const hillGeometry = new THREE.ConeGeometry(radius, height, 32);
+      const hillMaterial = new THREE.MeshBasicMaterial({ color: 0x996600, wireframe: true });
+      const hill = new THREE.Mesh(hillGeometry, hillMaterial);
+      const x = Math.random() * terrainSize - terrainSize / 2;
+      const z = Math.random() * terrainSize - terrainSize / 2;
+      const heightOffset = terrainSize / terrainResolution / 2;
+      const i = Math.floor((x + terrainSize / 2) / terrainSize * (terrainResolution - 1));
+      const j = Math.floor((z + terrainSize / 2) / terrainSize * (terrainResolution - 1));
+      hill.position.set(x, heightmap[i][j] + height / 2 + heightOffset, z);
+      return hill;
+    }
+
+    function generateValley(radius, depth, heightmap, terrainSize, terrainResolution) {
+      const valleyGeometry = new THREE.ConeGeometry(radius, -depth, 32);
+      const valleyMaterial = new THREE.MeshBasicMaterial({ color: 0x996600, wireframe: true });
+      const valley = new THREE.Mesh(valleyGeometry, valleyMaterial);
+      const x = Math.random() * terrainSize - terrainSize / 2;
+      const z = Math.random() * terrainSize - terrainSize / 2;
+      const heightOffset = terrainSize / terrainResolution / 2;
+      const i = Math.floor((x + terrainSize / 2) / terrainSize * (terrainResolution - 1));
+      const j = Math.floor((z + terrainSize / 2) / terrainSize * (terrainResolution - 1));
+      valley.position.set(x, heightmap[i][j] + depth / 2 + heightOffset, z);
+      return valley;
+    }
+
+    function generateCave(radius, depth, heightmap, terrainSize, terrainResolution) {
+      const caveGeometry = new THREE.SphereGeometry(radius, 32, 32);
+      const caveMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true });
+      const cave = new THREE.Mesh(caveGeometry, caveMaterial);
+      const x = Math.random() * terrainSize - terrainSize / 2;
+      const z = Math.random() * terrainSize - terrainSize / 2;
+      const heightOffset = terrainSize / terrainResolution / 2;
+      const i = Math.floor((x + terrainSize / 2) / terrainSize * (terrainResolution - 1));
+      const j = Math.floor((z + terrainSize / 2) / terrainSize * (terrainResolution - 1));
+      cave.position.set(x, heightmap[i][j] + depth + heightOffset, z);
+      return cave;
+    }
+
+    function generateLake(radius, depth, heightmap, terrainSize, terrainResolution) {
+      const lakeGeometry = new THREE.CircleGeometry(radius, 32);
+      const lakeMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, wireframe: true });
+      const lake = new THREE.Mesh(lakeGeometry, lakeMaterial);
+      const x = Math.random() * terrainSize - terrainSize / 2;
+      const z = Math.random() * terrainSize - terrainSize / 2;
+      const heightOffset = terrainSize / terrainResolution / 2;
+      const i = Math.floor((x + terrainSize / 2) / terrainSize * (terrainResolution - 1));
+      const j = Math.floor((z + terrainSize / 2) / terrainSize * (terrainResolution - 1));
+      lake.position.set(x, heightmap[i][j] + depth + heightOffset, z);
+      return lake;
+    }
+
+    function generatePlain(radius, height, heightmap, terrainSize, terrainResolution) {
+      const plainGeometry = new THREE.CircleGeometry(radius, 32);
+      const plainMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
+      const plain = new THREE.Mesh(plainGeometry, plainMaterial);
+      const x = Math.random() * terrainSize - terrainSize / 2;
+      const z = Math.random() * terrainSize - terrainSize / 2;
+      const heightOffset = terrainSize / terrainResolution / 2;
+      const i = Math.floor((x + terrainSize / 2) / terrainSize * (terrainResolution - 1));
+      const j = Math.floor((z + terrainSize / 2) / terrainSize * (terrainResolution - 1));
+      plain.position.set(x, heightmap[i][j] + height + heightOffset, z);
+      return plain;
+    }
+
+    function onMouseMove(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    }
+
+    function onMouseDown(event) {
+      if (isCreatingLevel) {
+        const intersects = raycaster.intersectObjects(objectsToPlace);
+        if (intersects.length > 0) {
+          const intersect = intersects[0];
+          const object = intersect.object.clone();
+          object.position.copy(intersect.point).add(intersect.face.normal);
+          scene.add(object);
+          objectsToPlace.push(object);
+        }
+      } else if (isPlaying) {
+        const intersects = raycaster.intersectObjects(spheres);
+        if (intersects.length > 0) {
+          const intersect = intersects[0];
+          intersect.object.visible = false;
+        }
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (isPlaying) {
+        const speed = 0.1;
+        const direction = new THREE.Vector3();
+        const axis = new THREE.Vector3(0, 1, 0);
+        const angle = speed;
+        direction.copy(player.position).normalize().applyAxisAngle(axis, angle);
+        player.position.add(direction);
+      }
+
+      raycaster.setFromCamera(mouse, camera);
+      renderer.render(scene, camera);
+    }
+
+    function startGame() {
+      isCreatingLevel = false;
+      isPlaying = true;
+    }
+
+    createLevel();
+    animate();
+  </script>
+</body>
+</html>
