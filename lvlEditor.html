@@ -3,7 +3,20 @@
   <head>
     <meta charset="UTF-8">
     <title>Interactive Three.js Scene</title>
-    <style>
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">    
+<style>
+    body {
+      padding-top: 60px; /* Adjust the top padding to match the height of the navbar */
+    }
+
+    footer {
+      background-color: #f8f9fa;
+      padding: 50px 0;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+
       body {
         margin: 0;
         overflow: hidden;
@@ -16,34 +29,115 @@
  button { font-size: 24px; }
     </style>
   </head>
-
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
     <body>
-<div id="score" style="position: absolute; top: 10px; left: 550px; color: white; font-size: 24px;"></div>
-    <div id="menu" style="position: absolute; top: 10px; left: 10px;">
-    <button onclick="createLevel()"><i class="fas fa-plus"></i></button>
-    <button onclick="playLevel()"><i class="fas fa-play"></i></button>
-    <button onclick="createTerrain()"><i class="fas fa-mountain"></i></button>
-    <button onclick="createCube()"><i class="fas fa-cube"></i></button>
-    <button onclick="createPyramid()"><i class="fas fa-pyramid"></i></button> 
-    <button onclick="playLevel()"><i class="fas fa-gamepad"></i></button>
-    <button onclick="dragon()"><i class="fas fa-dragon"></i></button>
-    <button onclick="playLevel()"><i class="fas fa-flag-checkered"></i></button>
-    <button onclick="createPawn()"><i class="fas fa-chess-pawn"></i></button>
-    <button onclick="createKing()"><i class="fas fa-chess-king"></i></button>
-    <button onclick="createQueen()"><i class="fas fa-chess-queen"></i></button>
-    <button onclick="createHorse()"><i class="fas fa-chess-knight"></i></button>
-    <button onclick="createSpaceShip()"><i class="fas fa-space-shuttle"></i> Create Space Ship</button>
-    <button onclick="Smothterrain()"><i class="fas fa-mountain"></i> Create Terrain</button>
-    <button onclick="createPawn()"><i class="fas fa-chess-pawn"></i> Create Chess Pawn</button>
-    <button onclick="createPawn()"><i class="fas fa-chess-pawn"></i> Create Chess Pawn</button>
-    <button onclick="CreateChessBoard()"><i class="fas fa-chess-board"></i> Create Chess Board</button>
-    <button onclick="Shipsout()"><i class="fas fa-ship"></i> Create Ship</button>
-    <button onclick="CarRacers()"><i class="fas fa-car"></i>Racers</button>
-    <button onclick="ufoAttack()"><i class="fa-solid fa-ufo"></i>UFOs</button>
-    <button onclick="particle()"><i class="fa-solid fa-ufo"></i>Rain</button>
-   
-
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+    <a class="navbar-brand" href="#">Project X Drive</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item active">
+	  <a class="nav-link" href="#">Help</a>
+        </li>
+	 <li class="">
+	 <a class="nav-link" href="#">About</a>
+	</li>
+	</li>
+	 <li class="">
+	 <a class="nav-link" href="#">Tutorials</a>
+	</li>
+	</li>
+	 <<li class="">
+	 <a class="nav-link" href="#">Store</a>
+	</li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="gamesDropdown" role="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            Create Game Template
+          </a>
+          <div class="dropdown-menu" aria-labelledby="gamesDropdown">
+            <button class="dropdown-item" onclick="createLevel()"><i class="fas fa-plus"></i> Create Level</button>
+            <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-play"></i> Test Level</button>
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-play"></i> Create Action Game</button>
+            <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-play"></i> Create Adventure Game</button>
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-play"></i> Create Role Playing Game</button>
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-play"></i> Create First Person Shooter</button>
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-play"></i> Create Racing Game</button>
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-play"></i> Create Platform Game</button>
+          </div>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="shapesDropdown" role="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            Shapes
+          </a>
+          <div class="dropdown-menu" aria-labelledby="shapesDropdown">
+            <button class="dropdown-item" onclick="createCube()"><i class="fas fa-cube"></i> Create Cube</button>
+            <button class="dropdown-item" onclick="createPyramid()"><i class="fas fa-pyramid"></i> Create Pyramid</button>
+	    <button class="dropdown-item" onclick="CreateSphere()"><i class="fas fa-sphere"></i> Create Sphere</button>
+	    <button class="dropdown-item" onclick="CreateTorso()"><i class="fas fa-sphere"></i> Create Torso</button>
+	    <button class="dropdown-item" onclick="createCylindar()"><i class="fas fa-sphere"></i> Create Cylindar</button>
+            <button class="dropdown-item" onclick="ufoAttack()"><i class="fa-solid fa-ufo"></i>UFO's</button>
+            <button class="dropdown-item" onclick="CarRacers()"><i class="fas fa-plan"></i>Race Cars</button>
+          </div>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="shapesDropdown" role="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            3d Models
+          </a>
+          <div class="dropdown-menu" aria-labelledby="modelDropdown">
+            <button class="dropdown-item" onclick="createCube()"><i class="fas fa-cube"></i> Create Mage</button>
+            <button class="dropdown-item" onclick="createPyramid()"><i class="fas fa-pyramid"></i> Create Pyramid</button>
+	    <button class="dropdown-item" onclick="CreateSphere()"><i class="fas fa-sphere"></i> Create Sphere</button>
+	    <button class="dropdown-item" onclick="CreateTorso()"><i class="fas fa-sphere"></i> Create Torso</button>
+	    <button class="dropdown-item" onclick="createCylindar()"><i class="fas fa-sphere"></i> Create Cylindar</button>
+            <button class="dropdown-item" onclick="ufoAttack()"><i class="fa-solid fa-ufo"></i>UFO's</button>
+            <button class="dropdown-item" onclick="CarRacers()"><i class="fas fa-plan"></i>Race Cars</button>
+          </div>
+        </li>
+	<li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="shapesDropdown" role="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            Game Assets
+          </a>
+          <div class="dropdown-menu" aria-labelledby="modelDropdown">
+            <button class="dropdown-item" onclick="createCube()"><i class="fas fa-cube"></i> Load Model</button>
+            <button class="dropdown-item" onclick="createPyramid()"><i class="fas fa-pyramid"></i>Load Background Music</button>
+	    <button class="dropdown-item" onclick="CreateSphere()"><i class="fas fa-sphere"></i>Load Sound Effects</button>
+	    <button class="dropdown-item" onclick="CreateTorso()"><i class="fas fa-sphere"></i> Create GUI</button>
+	    <button class="dropdown-item" onclick="createCylindar()"><i class="fas fa-sphere"></i> Load voices</button>
+            <button class="dropdown-item" onclick="ufoAttack()"><i class="fa-solid fa-ufo"></i>Load Level Map</button>
+            <button class="dropdown-item" onclick="CarRacers()"><i class="fas fa-plan"></i>Race Cars</button>
+          </div>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="chessDropdown" role="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            Chess
+          </a>
+          <div class="dropdown-menu" aria-labelledby="chessDropdown">
+            <button class="dropdown-item" onclick="CreateChessBoard()"><i class="fas fa-chess-board"></i> Create Chess Board</button>
+            <button class="dropdown-item" onclick="createPawn()"><i class="fas fa-chess-pawn"></i> Create Chess Pawn</button>
+            <button class="dropdown-item" onclick="createKing()"><i class="fas fa-chess-king"></i> Create Chess King</button>
+            <button class="dropdown-item" onclick="createQueen()"><i class="fas fa-chess-queen"></i> Create Chess Queen</button>
+            <button class="dropdown-item" onclick="createHorse()"><i class="fas fa-chess-knight"></i> Create Chess Horse</button>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Contact</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+<div id="score" style="position: absolute; bottom: 200px; left: 550px; color: white; font-size: 24px;"></div>
+    <div id="menu" style="">
+    
 
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -68,12 +162,14 @@
       const scoreElement = document.getElementById('score');
 
       const geometry = new THREE.BoxGeometry(1, 1, 1);
-      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, opacity: 0.4, transparent: true });
+      const material = new THREE.MeshBasicMaterial({ color: 0x00FF00, opacity: 0.6, transparent: false });
       const cube = new THREE.Mesh(geometry, material);
       //scene.add(cube);
 
-      const groundGeometry = new THREE.PlaneGeometry(600, 600);
-      const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x808080, opacity: 0.4, transparent: true, side: THREE.DoubleSide });
+
+
+      const groundGeometry = new THREE.PlaneGeometry(10, 10);
+      const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x00FF00, opacity: 0.4, transparent: true, side: THREE.DoubleSide });
       const ground = new THREE.Mesh(groundGeometry, groundMaterial);
       ground.rotation.x = Math.PI / 2;
       ground.position.y = -0.5;
@@ -998,5 +1094,10 @@ function animate() {
 
   init();
 </script>
+ <footer>
+    <div class="container text-center">
+      <p>&copy; 2023 My Website. All rights reserved.</p>
+    </div>
+  </footer>
 </body>
 </html>
