@@ -1,0 +1,345 @@
+<!--
+
+
+This applicaton was desinged and develop by Scott Mcleod with the Aid of AIG
+
+
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    .canvas-wrapper {
+      display: fixed
+      justify-content: center;
+      align-items: center;
+      height: 800px;
+      position: relative;
+    }
+
+    canvas {
+      border: 1px solid black;
+      cursor: crosshair;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='20' height='20' fill='%23f0f0f0'/%3E%3Crect x='20' y='20' width='20' height='20' fill='%23f0f0f0'/%3E%3C/svg%3E");
+    }
+
+    .toolbox {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background-color: darkgrey;
+      text-align: center;
+    }
+
+    .toolbox button {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+    }
+
+    .shapes {
+      margin-top: 20px;
+    }
+
+    .shape {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      text-align: center;
+      line-height: 40px;
+      font-size: 20px;
+      cursor: pointer;
+      border: 1px solid black;
+    }
+
+    .shape.active {
+      background-color: lightgray;
+    }
+
+    .options {
+      margin-top: 20px;
+    }
+
+    .options label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    #thicknessSlider {  
+      width: 100px;
+    }
+
+    #styleSelect {
+      width: 100px;
+    }
+
+    #colorPicker {
+      width: 100px;
+      height: 30px;
+    }
+
+    .layer {
+      padding: 5px;
+      border: 1px solid black;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+       background-color: darkgrey;
+    }
+  </style>
+  <title>Light Photoshop</title>
+</head>
+
+<body>
+  <div class="container">
+    <div class="jumbotron"><h1>Light Photoshop</h1></div>
+    <div class="row">
+      <div class="col-md-2">
+        <div class="toolbox">
+          <button class="btn btn-light tool-button" id="toolZoomIn" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+          <button class="btn btn-light tool-button" id="toolZoomOut" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+          <button class="btn btn-light tool-button" id="toolCrop" title="Crop"><i class="fas fa-crop-alt"></i></button>
+          <button class="btn btn-light tool-button" id="toolPen" title="Pen"><i class="fas fa-pen"></i></button>
+          <button class="btn btn-light tool-button" id="toolUpload" title="Upload Image"><i class="fas fa-upload"></i></button>
+          <button class="btn btn-light tool-button" id="toolClear" title="Clear Canvas"><i class="fas fa-trash"></i></button>
+        </div>
+
+        <div class="shapes">
+          <div class="shape active" id="shapeLine" title="Line"><i class="fas fa-minus"></i></div>
+          <div class="shape" id="shapeCircle" title="Circle"><i class="fas fa-circle"></i></div>
+          <div class="shape" id="shapeRectangle" title="Rectangle"><i class="fas fa-square"></i></div>
+        </div>
+
+        <div class="options">
+          <label for="thicknessSlider">Thickness:</label>
+          <input type="range" id="thicknessSlider" min="1" max="20" value="5">
+          <label for="styleSelect">Style:</label>
+          <select id="styleSelect">
+            <option value="solid">Solid</option>
+            <option value="dotted">Dotted</option>
+            <option value="dashed">Dashed</option>
+          </select>
+          <label for="colorPicker">Color:</label>
+          <input type="color" id="colorPicker" value="#000000">
+        </div>
+
+        <div class="layers">
+          <h4>Layers</h4>
+          <div id="layersContainer">
+            <div class="layer">
+              <input type="checkbox" id="layer1" checked>
+              <label for="layer1">Layer 1</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-10">
+        <div class="canvas-wrapper">
+          <canvas id="canvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+    const canvasWrapper = document.querySelector('.canvas-wrapper');
+    const toolButtons = document.querySelectorAll('.tool-button');
+    const shapeButtons = document.querySelectorAll('.shape');
+    const thicknessSlider = document.getElementById('thicknessSlider');
+    const styleSelect = document.getElementById('styleSelect');
+    const colorPicker = document.getElementById('colorPicker');
+    const layersContainer = document.getElementById('layersContainer');
+    const uploadButton = document.getElementById('toolUpload');
+    const clearButton = document.getElementById('toolClear');
+    const zoomInButton = document.getElementById('toolZoomIn');
+    const zoomOutButton = document.getElementById('toolZoomOut');
+
+    let isDrawing = false;
+    let currentTool = 'pen';
+    let currentShape = 'line';
+    let currentLayer = 1;
+    let startMousePosition = { x: 0, y: 0 };
+    let endMousePosition = { x: 0, y: 0 };
+    let zoomLevel = 1;
+
+    // Set canvas size based on the container's dimensions
+    canvas.width = canvasWrapper.offsetWidth;
+    canvas.height = canvasWrapper.offsetHeight;
+
+    // Handle window resize events
+    window.addEventListener('resize', () => {
+      canvas.width = canvasWrapper.offsetWidth;
+      canvas.height = canvasWrapper.offsetHeight;
+      applyZoom();
+    });
+
+    // Switch the active tool
+    toolButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        toolButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        currentTool = button.id.replace('tool', '').toLowerCase();
+      });
+    });
+
+    // Switch the active shape
+    shapeButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        shapeButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        currentShape = button.id.replace('shape', '').toLowerCase();
+      });
+    });
+
+    // Change stroke thickness
+    thicknessSlider.addEventListener('input', () => {
+      context.lineWidth = thicknessSlider.value;
+    });
+
+    // Change stroke style
+    styleSelect.addEventListener('change', () => {
+      context.setLineDash([]);
+      if (styleSelect.value === 'dotted') {
+        context.setLineDash([context.lineWidth, context.lineWidth]);
+      } else if (styleSelect.value === 'dashed') {
+        context.setLineDash([context.lineWidth * 4, context.lineWidth]);
+      }
+    });
+
+    // Change stroke color
+    colorPicker.addEventListener('input', () => {
+      context.strokeStyle = colorPicker.value;
+    });
+
+    // Handle mouse down event
+    canvas.addEventListener('mousedown', (event) => {
+      isDrawing = true;
+      startMousePosition = getMousePosition(event);
+      if (currentTool === 'crop') {
+        // Implement crop functionality
+        // ...
+      }
+      else if (currentShape === 'circle') {
+        drawCircle(startMousePosition, endMousePosition);
+      }
+      else if (currentShape === 'rectangle') {
+        drawRectangle(startMousePosition, endMousePosition);
+      }
+    });
+
+    // Handle mouse move event
+    canvas.addEventListener('mousemove', (event) => {
+      if (!isDrawing) return;
+      endMousePosition = getMousePosition(event);
+
+      if (currentTool === 'pen') {
+        drawLine(startMousePosition, endMousePosition);
+        startMousePosition = { ...endMousePosition };
+      }
+    });
+
+    // Handle mouse up event
+    canvas.addEventListener('mouseup', () => {
+      isDrawing = false;
+    });
+
+    // Handle mouse leave event
+    canvas.addEventListener('mouseleave', () => {
+      isDrawing = false;
+    });
+
+    // Helper function to get the mouse position relative to the canvas
+    function getMousePosition(event) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      };
+    }
+
+    // Draw a line on the canvas
+    function drawLine(start, end) {
+      context.beginPath();
+      context.moveTo(start.x, start.y);
+      context.lineTo(end.x, end.y);
+      context.stroke();
+    }
+
+    // Draw a circle on the canvas
+    function drawCircle(start, end) {
+      const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+      context.beginPath();
+      context.arc(start.x, start.y, radius, 0, 2 * Math.PI);
+      context.stroke();
+    }
+
+    // Draw a rectangle on the canvas
+    function drawRectangle(start, end) {
+      const width = Math.abs(end.x - start.x);
+      const height = Math.abs(end.y - start.y);
+      const x = Math.min(start.x, end.x);
+      const y = Math.min(start.y, end.y);
+      context.beginPath();
+      context.rect(x, y, width, height);
+      context.stroke();
+    }
+
+    // Upload image functionality
+    uploadButton.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = handleImageUpload;
+      input.click();
+    });
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (event) {
+        const img = new Image();
+        img.onload = function () {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+        img.src = event.target.result;
+      }
+
+      reader.readAsDataURL(file);
+    }
+
+    // Clear canvas functionality
+    clearButton.addEventListener('click', () => {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // Zoom in functionality
+    zoomInButton.addEventListener('click', () => {
+      zoomLevel += 0.1;
+      applyZoom();
+    });
+
+    // Zoom out functionality
+    zoomOutButton.addEventListener('click', () => {
+      zoomLevel -= 0.1;
+      applyZoom();
+    });
+
+    // Apply zoom to the canvas
+    function applyZoom() {
+      canvas.style.transform = `scale(${zoomLevel})`;
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<!--
+	Project title: Project X Drive 
+	Project Creator: Scott Robert Mcleod
+	Project Purpose: 
+		Create a 3d Game Engine that lets the users make games based off templates 
+		That runs off the web and have a store that creators can sell thier content to other companies or projects to 
+		Publishers  
+	
+	Project Requirements: 
+		Each template needs to be a functional level that has a standard GUI for players to navigate to test the level 
+		the project must run on the web and utlise 3d Graphics provided by OpeneGL
+		Frame work used: ThreeJS, boortstrap for the GUI of the app 
+		Language used: Html, Javascript and CSS
+		a login to gain access to the service that is a subscription model 
+
+	Additional Features:
+		Add a light version of photoshop that can be accessed via a moddel from the top menue 
+		Creators Profile page show casing current and completed projects
+		Web Deigner app that comes out as a moddel that lets Creators Make quick bootstrap webpages for the following sites
+		Wordpress templates
+		Landing pages 
+		Eccommers Templates 
+		Email Marketing templates
+	
+	Create an Admin Portal for Digital Marketing companyes to manage Social Media content for other companies
+
+        Code and Project Structure 
+	Make sure that if any user connect to the service they are not able to view the source code outsid of the html code 
+	Reason this protects the IP of Creator   
+-->
+<html>
+	<head>
+	<meta charset="UTF-8">
+	<title>Project X Drive</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+	</head>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+	<body>
+  		<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+    			<a class="navbar-brand" href="#">Project X Drive</a>
+    			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+      				aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      			<span class="navbar-toggler-icon"></span>
+    			</button>
+    			<div class="collapse navbar-collapse" id="navbarNav">
+      				<ul class="navbar-nav ml-auto">
+      					<li class=""><a class="nav-link" href="#">Change Skybox</a></li>
+					<li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="gamesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Create Game Template</a>
+          <div class="dropdown-menu" aria-labelledby="gamesDropdown">
+            <button class="dropdown-item" onclick="createLevel()"><i class="fas fa-plus"></i> Create Level</button>
+            <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-play"></i> Test Level</button>
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-fighter-jet"></i> Create Action Game</button>
+            <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-skull-crossbones"></i> Create Adventure Game</button>
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-hat-wizard"></i> Create Role Playing Game</button>
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-crosshairs"></i> Create First Person Shooter</button>
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-flag-checkered"></i> Create Racing Game</button>
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-gamepad"></i> Create Platform Game</button>
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-chess-board"></i> Create Strategy Game</button> 
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-cogs"></i> Create Simulation Game</button> 
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-futbol"></i> Create Sports Game</button> 
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-puzzle-piece"></i> Create Puzzle Game</button>  
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-fist-raised"></i> Create Fighting Game</button> 
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-users"></i> Create MMO Game</button> 
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-globe"></i> Create Sandbox Game</button>  
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-graduation-cap"></i> Create Educational Game</button>  
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-glass-cheers"></i> Create Party Game</button>  
+	    <button class="dropdown-item" onclick="playLevel()"><i class="fas fa-vr-cardboard"></i> Create  Virtual Reality</button> 
+          </div>
+        </li>
+	<li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="shapesDropdown" role="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            Game Assets
+          </a>
+          <div class="dropdown-menu" aria-labelledby="modelDropdown">
+            <button class="dropdown-item" onclick="createCube()"><i class="fas fa-cube"></i> Load Model</button>
+            <button class="dropdown-item" onclick="createPyramid()"><i class="fas fa-pyramid"></i>Load Background Music</button>
+	    <button class="dropdown-item" onclick="CreateSphere()"><i class="fas fa-sphere"></i>Load Sound Effects</button>
+	    <button class="dropdown-item" onclick="CreateTorso()"><i class="fas fa-sphere"></i> Create GUI</button>
+	    <button class="dropdown-item" onclick="createCylindar()"><i class="fas fa-sphere"></i> Load voices</button>
+            <button class="dropdown-item" onclick="ufoAttack()"><i class="fa-solid fa-ufo"></i>Load Level Map</button>
+            <button class="dropdown-item" onclick="CarRacers()"><i class="fas fa-plan"></i>Race Cars</button>
+          </div>
+        </li>
+	        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="chessDropdown" role="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            Chess
+          </a>
+          <div class="dropdown-menu" aria-labelledby="chessDropdown">
+            <button class="dropdown-item" onclick="CreateChessBoard()"><i class="fas fa-chess-board"></i> Create Chess Board</button>
+            <button class="dropdown-item" onclick="createPawn()"><i class="fas fa-chess-pawn"></i> Create Chess Pawn</button>
+            <button class="dropdown-item" onclick="createKing()"><i class="fas fa-chess-king"></i> Create Chess King</button>
+            <button class="dropdown-item" onclick="createQueen()"><i class="fas fa-chess-queen"></i> Create Chess Queen</button>
+            <button class="dropdown-item" onclick="createHorse()"><i class="fas fa-chess-knight"></i> Create Chess Horse</button>
+          </div>
+        </li>
+	<li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="shapesDropdown" role="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            3d Models
+          </a>
+          <div class="dropdown-menu" aria-labelledby="modelDropdown">
+            <button class="dropdown-item" onclick="createCube()"><i class="fas fa-cube"></i> Create Mage</button>
+            <button class="dropdown-item" onclick="createDragon()"><i class="fas fa-pyramid"></i>Create Dragon</button>
+	    <button class="dropdown-item" onclick="createSheld()"><i class="fas fa-sphere"></i> Create Weapons</button>
+	    <button class="dropdown-item" onclick="CreateGoombar()"><i class="fas fa-sphere"></i> Create Gombar</button>
+	    <button class="dropdown-item" onclick="createUnicorn()"><i class="fas fa-sphere"></i> Create Unicorn</button>
+            <button class="dropdown-item" onclick="ufoAttack()"><i class="fa-solid fa-ufo"></i>UFO's</button>
+            <button class="dropdown-item" onclick="CarRacers()"><i class="fas fa-plan"></i>Race Cars</button>
+	    <button class="dropdown-item" onclick="CreateMario()"><i class="fas fa-plan"></i>Mario</button>
+          </div>
+        </li>
+ <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="shapesDropdown" role="button" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            Shapes
+          </a>
+          <div class="dropdown-menu" aria-labelledby="shapesDropdown">
+            <button class="dropdown-item" onclick="createCube()"><i class="fas fa-cube"></i> Create Cube</button>
+            <button class="dropdown-item" onclick="createPyramid()"><i class="fas fa-pyramid"></i> Create Pyramid</button>
+	    <button class="dropdown-item" onclick="CreateSphere()"><i class="fas fa-sphere"></i> Create Sphere</button>
+	    <button class="dropdown-item" onclick="CreateTorso()"><i class="fas fa-sphere"></i> Create Torso</button>
+	    <button class="dropdown-item" onclick="createCylindar()"><i class="fas fa-sphere"></i> Create Cylindar</button>
+            <button class="dropdown-item" onclick="ufoAttack()"><i class="fa-solid fa-ufo"></i>UFO's</button>
+            <button class="dropdown-item" onclick="CarRacers()"><i class="fas fa-plan"></i>Race Cars</button>
+          </div>
+        </li>
+        	<li class=""><a class="nav-link" href="#">Help</a></li>
+	 				<li class="">
+	 					<a class="nav-link" href="#">About</a>
+					</li>				
+	 				<li class="">
+	 					<a class="nav-link" href="#">Tutorials</a>
+					</li>
+					<li class="">
+	 					<a class="nav-link" href="#">Store</a>
+					</li>       				
+        <li class="nav-item">
+          <a class="nav-link" href="#">Contact</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+<div id="score" style="position: absolute; bottom: 200px; left: 550px; color: white; font-size: 24px;"></div>
+    <div id="menu" style="">
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+    <script src="engine.js"></script>
+      <script>
+  init();
+</script>
+ <footer>
+    <div class="container text-center">
+      <p>&copy; 2023 Prjoject X Drive. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>
